@@ -46,7 +46,8 @@ module Cucumber
       NO_PROFILE_SHORT_FLAG = '-P'
       PROFILE_LONG_FLAG = '--profile'
       NO_PROFILE_LONG_FLAG = '--no-profile'
-
+      REQUIRE_SHORT_FLAG = '-r'
+      REQUIRE_LONG_FLAG = '--require'
 
       def self.parse(args, out_stream, error_stream, options = {})
         new(out_stream, error_stream, options).parse!(args)
@@ -77,7 +78,10 @@ module Cucumber
         return @expanded_args_without_drb  if @expanded_args_without_drb
         @expanded_args_without_drb = (
           previous_flag_was_profile = false
+          previous_flag_was_require = false
+
           @expanded_args.reject do |arg|
+            # ignore profiles
             if previous_flag_was_profile
               previous_flag_was_profile = false
               next true
@@ -85,6 +89,16 @@ module Cucumber
             if [PROFILE_SHORT_FLAG, PROFILE_LONG_FLAG].include?(arg)
               previous_flag_was_profile = true
               next true
+            end
+
+            # accept all require options
+            if previous_flag_was_require
+              previous_flag_was_require = false
+              next false
+            end
+            if [REQUIRE_SHORT_FLAG, REQUIRE_LONG_FLAG].include?(arg)
+              previous_flag_was_require = true
+              next false
             end
             arg == DRB_FLAG || @overridden_paths.include?(arg)
           end
